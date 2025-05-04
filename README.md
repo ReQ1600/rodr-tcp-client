@@ -1,5 +1,5 @@
-# rodr-tcp-client
-A TCP Client class for my remotly operated diving robot.
+# RODR TCP Client
+A TCP Client class for a remotely operated diving robot.
 
 Only works on Windows
 
