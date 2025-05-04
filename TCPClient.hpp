@@ -4,6 +4,8 @@
 #include <Ws2tcpip.h>
 #include <iostream>
 
+#include "utils.hpp"
+
 //add "-lws2_32" to tasks.json/args
 namespace rodr
 {   
@@ -20,8 +22,8 @@ namespace rodr
 
             std::pair<bool, unsigned char> Test() const;
             void SendMsg(const char* msg) const;
-            void ReceiveAndHandle() const;
-            void ReceiveAndHandle(char* buffer, const unsigned int buffer_size) const;
+            void ReceiveAndHandle(rodr::handler handler_function) const;
+            void ReceiveAndHandle(char* buffer, const unsigned int buffer_size, rodr::handler handler_function) const;
 
         private:
             SOCKET socket_ = INVALID_SOCKET;

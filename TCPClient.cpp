@@ -9,7 +9,7 @@ namespace rodr
         {
             if (WSAStartup(MAKEWORD(2, 2), &data_) != 0)
             {
-                std::cerr << "WSAStartup failed with error code: " << WSAGetLastError() << std::endl;
+                std::cerr << "TCP: WSAStartup failed with error code: " << WSAGetLastError() << std::endl;
                 return;
             }
             
@@ -17,7 +17,7 @@ namespace rodr
             socket_ = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
             if (socket_ == INVALID_SOCKET)
             {
-                std::cerr << "Socket creation failed with error code: " << WSAGetLastError() << std::endl;
+                std::cerr << "TCP: Socket creation failed with error code: " << WSAGetLastError() << std::endl;
                 WSACleanup();
                 return;
             }
@@ -25,7 +25,7 @@ namespace rodr
             //setting socket receive timeout
             if (setsockopt(socket_, SOL_SOCKET, SO_RCVTIMEO, (const char*)&RECV_MSG_TIMEOUT, sizeof(RECV_MSG_TIMEOUT)))
             {
-                std::cerr << "Setsockopt failed with error code: " << WSAGetLastError() << std::endl;
+                std::cerr << "TCP: Setsockopt failed with error code: " << WSAGetLastError() << std::endl;
                 closesocket(socket_);
                 WSACleanup();
                 return;
@@ -33,12 +33,21 @@ namespace rodr
 
             //client setup
             client_.sin_family = AF_INET;
-            inet_pton(AF_INET, ip_addr, &client_.sin_addr.S_un.S_addr);
+            int ret = inet_pton(AF_INET, ip_addr, &client_.sin_addr.S_un.S_addr);
+
+            if (ret <= 0)
+            {
+                if (ret == 0) std::cerr << "TCP: Invalid client address format: " << ip_addr << std::endl; 
+                else std::cerr << "TCP: inet_pton failed for client with error code: " << WSAGetLastError() << std::endl;
+
+                WSACleanup();
+                return;
+            }
             client_.sin_port = htons(port);
 
             if (connect(socket_, (sockaddr*)&client_, sizeof(client_)) == SOCKET_ERROR)
             {
-                std::cerr << "Connect failed with error code: " << WSAGetLastError() << std::endl;
+                std::cerr << "TCP: Connect failed with error code: " << WSAGetLastError() << std::endl;
                 closesocket(socket_);
                 WSACleanup();
                 return;
@@ -64,7 +73,7 @@ namespace rodr
             for (int i = 0; i < 3; ++i)
             {   
                 SendMsg("PING");
-                ReceiveAndHandle(buffer, buf_size);
+                ReceiveAndHandle(buffer, buf_size, [](const char*){return;});
 
                 //if msg received is not pong
                 if (strcmp(buffer, "PONG\r\n"))
@@ -82,31 +91,36 @@ namespace rodr
         void TCPClient::SendMsg(const char* msg) const
         {
             int sent_bytes = send(socket_, msg, strlen(msg), 0);
-            if (sent_bytes == SOCKET_ERROR)
-            {
-                std::cerr << "Send failed with error code: " << WSAGetLastError() << std::endl;
-            }
+            if (sent_bytes == SOCKET_ERROR) std::cerr << "TCP: Send failed with error code: " << WSAGetLastError() << std::endl;
         }
 
         //recieves data from server and processes it
-        void TCPClient::ReceiveAndHandle() const
+        void TCPClient::ReceiveAndHandle(rodr::handler handler_function) const
         {
             char buffer[DEFAULT_BUFFER_SIZE] = { 0 };
             int received = recv(socket_, buffer, DEFAULT_BUFFER_SIZE, 0);
 
-            if (received > 0) std::cout << "Received: " << buffer << std::endl;
-            else if (received == 0) std::cout << "Connection closed." << std::endl;
-            else std::cerr << "Receive failed with error code: " << WSAGetLastError() << std::endl;
+            if (received > 0) 
+            {
+                std::cout << "TCP: Received: " << buffer << std::endl;
+                handler_function(buffer);
+            }
+            else if (received == 0) std::cout << "TCP: Connection closed." << std::endl;
+            else std::cerr << "TCP: Receive failed with error code: " << WSAGetLastError() << std::endl;
         }
 
         //recieves data from server on given buffer and processes it
-        void TCPClient::ReceiveAndHandle(char* buffer, const unsigned int buffer_size) const
+        void TCPClient::ReceiveAndHandle(char* buffer, const unsigned int buffer_size, rodr::handler handler_function) const
         {
             int received = recv(socket_, buffer, buffer_size, 0);
 
-            if (received > 0) std::cout << "Received: " << buffer << std::endl;
-            else if (received == 0) std::cout << "Connection closed." << std::endl;
-            else std::cerr << "Receive failed with error code: " << WSAGetLastError() << std::endl;
+            if (received > 0) 
+            {
+                std::cout << "TCP: Received: " << buffer << std::endl;
+                handler_function(buffer);
+            }
+            else if (received == 0) std::cout << "TCP: Connection closed." << std::endl;
+            else std::cerr << "TCP: Receive failed with error code: " << WSAGetLastError() << std::endl;
         }
     }
 }
