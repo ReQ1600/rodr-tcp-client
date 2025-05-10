@@ -88,10 +88,17 @@ namespace rodr
         }
 
         //sends given message
-        void TCPClient::SendMsg(const char* msg) const
+        void TCPClient::SendMsg(const char* msg, handler err_handler) const
         {
             int sent_bytes = send(socket_, msg, strlen(msg), 0);
-            if (sent_bytes == SOCKET_ERROR) std::cerr << "TCP: Send failed with error code: " << WSAGetLastError() << std::endl;
+            if (sent_bytes == SOCKET_ERROR)
+            {
+                char last_err[8];
+                snprintf(last_err, sizeof(last_err), "%d", WSAGetLastError());
+
+                std::cerr << "TCP: Send failed with error code: " << last_err << std::endl;
+                err_handler(last_err);
+            }
         }
 
         //recieves data from server and processes it
