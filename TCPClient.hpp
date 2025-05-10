@@ -23,9 +23,9 @@ namespace rodr
             ~TCPClient();
 
             std::pair<bool, unsigned char> Test() const;
-            void SendMsg(const char* msg) const;
-            void ReceiveAndHandle(rodr::handler handler_function, rodr::handler err_handler_function) const;
-            void ReceiveAndHandle(char* buffer, const unsigned int buffer_size, rodr::handler handler_function, rodr::handler err_handler_function) const;
+            void SendMsg(const char* msg, handler err_handler = [](const char*){return;}) const;
+            void ReceiveAndHandle(rodr::handler handler_function, rodr::handler err_handler_function = [](const char*){return;}) const;
+            void ReceiveAndHandle(char* buffer, const unsigned int buffer_size, rodr::handler handler_function, rodr::handler err_handler_function = [](const char*){return;}) const;
 
         private:
             SOCKET socket_ = INVALID_SOCKET;
