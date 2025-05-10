@@ -6,7 +6,9 @@
 
 #include "rodrUtils.hpp"
 
-//add "-lws2_32" to tasks.json/args
+#pragma comment(lib, "ws2_32.lib")
+//if vsc add "-lws2_32" to tasks.json/args
+
 namespace rodr
 {   
     namespace tcp
