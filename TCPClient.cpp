@@ -73,7 +73,7 @@ namespace rodr
             for (int i = 0; i < 3; ++i)
             {   
                 SendMsg("PING");
-                ReceiveAndHandle(buffer, buf_size, [](const char*){return;});
+                ReceiveAndHandle(buffer, buf_size, [](const char*){return;}, [](const char*){return;});
 
                 //if msg received is not pong
                 if (strcmp(buffer, "PONG\r\n"))
@@ -95,7 +95,7 @@ namespace rodr
         }
 
         //recieves data from server and processes it
-        void TCPClient::ReceiveAndHandle(rodr::handler handler_function) const
+        void TCPClient::ReceiveAndHandle(rodr::handler handler_function, rodr::handler err_handler_function) const
         {
             char buffer[DEFAULT_BUFFER_SIZE] = { 0 };
             int received = recv(socket_, buffer, DEFAULT_BUFFER_SIZE, 0);
@@ -106,11 +106,18 @@ namespace rodr
                 handler_function(buffer);
             }
             else if (received == 0) std::cout << "TCP: Connection closed." << std::endl;
-            else std::cerr << "TCP: Receive failed with error code: " << WSAGetLastError() << std::endl;
+            else
+            {
+                char last_err[8];
+                snprintf(last_err, sizeof(last_err), "%d", WSAGetLastError());
+
+                std::cerr << "TCP: Receive failed with error code: " << last_err << std::endl;
+                err_handler_function(last_err);
+            }
         }
 
         //recieves data from server on given buffer and processes it
-        void TCPClient::ReceiveAndHandle(char* buffer, const unsigned int buffer_size, rodr::handler handler_function) const
+        void TCPClient::ReceiveAndHandle(char* buffer, const unsigned int buffer_size, rodr::handler handler_function, rodr::handler err_handler_function) const
         {
             int received = recv(socket_, buffer, buffer_size, 0);
 
@@ -120,7 +127,14 @@ namespace rodr
                 handler_function(buffer);
             }
             else if (received == 0) std::cout << "TCP: Connection closed." << std::endl;
-            else std::cerr << "TCP: Receive failed with error code: " << WSAGetLastError() << std::endl;
+            else
+            {
+                char last_err[8];
+                snprintf(last_err, sizeof(last_err), "%d", WSAGetLastError());
+
+                std::cerr << "TCP: Receive failed with error code: " << last_err << std::endl;
+                err_handler_function(last_err);
+            }
         }
     }
 }
