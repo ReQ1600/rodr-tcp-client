@@ -7,8 +7,8 @@
 #include "rodrUtils.hpp"
 
 #pragma comment(lib, "ws2_32.lib")
-//if vsc add "-lws2_32" to tasks.json/args
 
+//if on vsc add "-lws2_32" to tasks.json/args
 namespace rodr
 {   
     namespace tcp
@@ -24,15 +24,13 @@ namespace rodr
 
             std::pair<bool, unsigned char> Test() const;
             void SendMsg(const char* msg) const;
-            void ReceiveAndHandle(rodr::handler handler_function) const;
-            void ReceiveAndHandle(char* buffer, const unsigned int buffer_size, rodr::handler handler_function) const;
+            void ReceiveAndHandle(rodr::handler handler_function, rodr::handler err_handler_function) const;
+            void ReceiveAndHandle(char* buffer, const unsigned int buffer_size, rodr::handler handler_function, rodr::handler err_handler_function) const;
 
         private:
             SOCKET socket_ = INVALID_SOCKET;
             sockaddr_in client_;
             WSAData data_;
         };
-
-        
     }
 }
