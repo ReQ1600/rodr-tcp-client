@@ -76,7 +76,7 @@ namespace rodr
                 ReceiveAndHandle(buffer, buf_size, [](const char*){return;}, [](const char*){return;});
 
                 //if msg received is not pong
-                if (strcmp(buffer, "PONG\r\n"))
+                if (strcmp(buffer, "PONG"))
                 {
                     success = false;
                     continue;
